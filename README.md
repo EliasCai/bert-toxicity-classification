@@ -1,6 +1,7 @@
 # BERT-toxicity-classification
 This repo show how to train bert model on [Jigsaw Unintended Bias in Toxicity Classification](https://www.kaggle.com/c/jigsaw-unintended-bias-in-toxicity-classification )  
-**star me and i will keep update the code**
+**star me and i will keep update the code**  
+**this repo is modified from [google open source code for bert](https://github.com/google-research/bert) , thank [Jon Mischo advice here](https://www.kaggle.com/c/jigsaw-unintended-bias-in-toxicity-classification/discussion/88018#latest-508488)**
 
 ### LB Score 
 1. 2019-04-06: 0.91216
