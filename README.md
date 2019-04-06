@@ -44,4 +44,4 @@ python run_classifier.py \
 3. average different checkpoint prediction
 
 **like this repo? you can buy me a cup of coffee**  
-![](output/2019-03-28_10-40-48.jpg =200x200)
+![](output/2019-03-28_10-40-48.png)
