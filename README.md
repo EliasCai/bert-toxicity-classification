@@ -7,7 +7,7 @@ This repo show how to train bert model on [Jigsaw Unintended Bias in Toxicity Cl
 
 ### How to output the prediction on test data by finetuning bert model
 #### prepare
-1. download the pretrain model
+1. [download the pretrain model](https://storage.googleapis.com/bert_models/2018_10_18/uncased_L-12_H-768_A-12.zip )
 2. download the data and unzip to input folder
 3. split the train and dev data(for convenience, i just tyde this command and not recommanded)
 ```
