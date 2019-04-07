@@ -5,6 +5,7 @@ This repo show how to train bert model on [Jigsaw Unintended Bias in Toxicity Cl
 
 ### LB Score 
 1. 2019-04-06: 0.91216
+2. 2019-04-07: 0.91455(add text clean method reference [here](https://www.kaggle.com/thousandvoices/simple-lstm ))
 
 ### How to output the prediction on test data by finetuning bert model
 #### prepare
