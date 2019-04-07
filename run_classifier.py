@@ -42,10 +42,10 @@ python run_classifier.py \
   --bert_config_file=/data1/1904_awesone-bert/uncased_L-12_H-768_A-12/bert_config.json \
   --init_checkpoint=/data1/1904_awesone-bert/uncased_L-12_H-768_A-12/bert_model.ckpt \
   --task_name=toxic \
-  --do_train=False \
+  --do_train=True \
   --do_eval=True \
   --do_predict=True \
-  --output_dir=mrpc_output/
+  --output_dir=model_output/
 """
 
 
@@ -112,7 +112,7 @@ flags.DEFINE_bool(
     "do_predict", False, "Whether to run the model in inference mode on the test set."
 )
 
-flags.DEFINE_integer("train_batch_size", 32, "Total batch size for training.")
+flags.DEFINE_integer("train_batch_size", 64, "Total batch size for training.")
 
 flags.DEFINE_integer("eval_batch_size", 64, "Total batch size for eval.")
 
@@ -121,7 +121,7 @@ flags.DEFINE_integer("predict_batch_size", 64, "Total batch size for predict.")
 flags.DEFINE_float("learning_rate", 2e-5, "The initial learning rate for Adam.")
 
 flags.DEFINE_float(
-    "num_train_epochs", 10.0, "Total number of training epochs to perform."
+    "num_train_epochs", 2.0, "Total number of training epochs to perform."
 )
 
 flags.DEFINE_float(
@@ -261,6 +261,156 @@ class DataProcessor(object):
             # print('len of', input_file, len(lines))
             return lines
 
+
+class MnliProcessor(DataProcessor):
+    """Processor for the MultiNLI data set (GLUE version)."""
+
+    def get_train_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "train.tsv")), "train"
+        )
+
+    def get_dev_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "dev_matched.tsv")), "dev_matched"
+        )
+
+    def get_test_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "test_matched.tsv")), "test"
+        )
+
+    def get_labels(self):
+        """See base class."""
+        return ["contradiction", "entailment", "neutral"]
+
+    def _create_examples(self, lines, set_type):
+        """Creates examples for the training and dev sets."""
+        examples = []
+        for (i, line) in enumerate(lines):
+            if i == 0:
+                continue
+            guid = "%s-%s" % (set_type, tokenization.convert_to_unicode(line[0]))
+            text_a = tokenization.convert_to_unicode(line[8])
+            text_b = tokenization.convert_to_unicode(line[9])
+            if set_type == "test":
+                label = "contradiction"
+            else:
+                label = tokenization.convert_to_unicode(line[-1])
+            examples.append(
+                InputExample(guid=guid, text_a=text_a, text_b=text_b, label=label)
+            )
+        return examples
+
+
+class MrpcProcessor(DataProcessor):
+    """Processor for the MRPC data set (GLUE version)."""
+
+    def get_train_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "train.tsv")), "train"
+        )
+
+    def get_dev_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev"
+        )
+
+    def get_test_examples(self, data_dir):
+        """See base class."""
+
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "dev.tsv")), "test"
+        )
+
+    def get_labels(self, labels):
+        """See base class."""
+        return set(labels)
+
+    # new function get the result tsv
+    def get_results(self, data_dir):
+        """See base class."""
+        return self._read_tsv(os.path.join(data_dir, "test_results.tsv"))
+
+    def _create_examples(self, lines, set_type):
+        """Creates examples for the training and dev sets."""
+        examples = []
+        labels = []
+        labels_test = []
+        for (i, line) in enumerate(lines):
+            if i == 0:
+                continue
+            guid = "%s-%s" % (set_type, i)
+
+            # tokenization is based on vocab file
+            text_a = tokenization.convert_to_unicode(line[0])
+            label = tokenization.convert_to_unicode(line[1])
+            labels.append(label)
+
+            if set_type == "test":
+                label = "0"
+            labels_test.append(label)
+            examples.append(
+                InputExample(guid=guid, text_a=text_a, text_b=None, label=label)
+            )
+
+        return examples, labels, labels_test
+
+
+class ColaProcessor(DataProcessor):
+    """Processor for the CoLA data set (GLUE version)."""
+
+    def get_train_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "train.tsv")), "train"
+        )
+
+    def get_dev_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "dev.tsv")), "dev"
+        )
+
+    def get_test_examples(self, data_dir):
+        """See base class."""
+        return self._create_examples(
+            self._read_tsv(os.path.join(data_dir, "dev.tsv")), "test"
+        )
+
+    def get_labels(self, labels):
+        """See base class."""
+        return ["0", "1"]
+
+    def _create_examples(self, lines, set_type):
+        """Creates examples for the training and dev sets."""
+        examples = []
+        labels = []
+        labels_test = []
+        for (i, line) in enumerate(lines):
+            # Only the test set has a header
+            if set_type == "test" and i == 0:
+                continue
+            guid = "%s-%s" % (set_type, i)
+            if set_type == "test":
+                text_a = tokenization.convert_to_unicode(line[1])
+                label = "0"
+            else:
+                text_a = tokenization.convert_to_unicode(line[3])
+                label = tokenization.convert_to_unicode(line[1])
+            labels.append(label)
+            labels_test.append(label)
+            examples.append(
+                InputExample(guid=guid, text_a=text_a, text_b=None, label=label)
+            )
+        return examples, labels, labels_test
+
+
 class ToxicProcessor(DataProcessor):
     """Processor for the CoLA data set (GLUE version)."""
 
@@ -286,7 +436,16 @@ class ToxicProcessor(DataProcessor):
     def get_labels(self, labels):
         """See base class."""
         return ["0", "1"]
-
+    
+    
+    def _clean_special_chars(self, text):
+        punct = "/-'?!.,#$%\'()*+-/:;<=>@[\\]^_`{|}~`" + '""“”’' + '∞θ÷α•à−β∅³π‘₹´°£€\×™√²—–&'
+        for p in punct:
+            if p in text:
+                text = text.replace(p, ' ')
+        return text
+    
+    
     def _create_examples(self, lines, set_type):
         """Creates examples for the training and dev sets."""
         examples = []
@@ -298,12 +457,16 @@ class ToxicProcessor(DataProcessor):
                 continue
             guid = "%s-%s" % (set_type, i)
             if set_type == "test":
-                text_a = tokenization.convert_to_unicode(line[1])
+                text = line[1]
+                text = self._clean_special_chars(text)
+                text_a = tokenization.convert_to_unicode(text)
                 label = "0"
                 guid = "%s" % (line[0])
             else:
                 try:
-                    text_a = tokenization.convert_to_unicode(line[2])
+                    text = line[2]
+                    text = self._clean_special_chars(text)
+                    text_a = tokenization.convert_to_unicode(text)
                 except:
                     print(len(line))
                     print(line)
@@ -759,6 +922,9 @@ def main(_):
     tf.logging.set_verbosity(tf.logging.INFO)
 
     processors = {
+        "cola": ColaProcessor,
+        "mnli": MnliProcessor,
+        "mrpc": MrpcProcessor,
         "toxic": ToxicProcessor,
     }
 
